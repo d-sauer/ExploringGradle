@@ -1,0 +1,133 @@
+
+// to run task: gradle hello
+task hello {
+    doLast {
+        println 'Hello world..'
+    }
+}
+
+// same sa hello, but more concise
+task hello2 << {
+    String hello = "Hello world 2!"
+    println hello.toUpperCase()
+}
+
+task count << {
+    5.times { print ((it + 1) + " ")  }
+    println "Start!"
+}
+
+// 1. call 'hello'
+// 2. execute current task
+task intro (dependsOn: hello) << {
+    println "This is intro.."
+}
+
+
+// Dynamically create task.
+// run task: gradle task_N
+4.times {
+    counter -> task "task_$counter" << {
+        if (counter < 3) {
+            println "This is task No. $counter"
+        } else {
+            println "This is last task ($counter)"
+        }
+    }
+}
+task_0.dependsOn task_2, task_3
+
+
+// Adding behaviour to task, and execute them by order
+// when execute: gradle planets
+task planets << {
+    println "2. Venus"
+}
+
+planets.doFirst {
+    println "1. Mercury"
+}
+
+planets.doLast {
+    println "3. Earth"
+}
+
+planets << { // same as .doLast (just shorter syntax)
+    println "4. Mars"
+}
+
+planets << { // same as .doLast (just shorter syntax)
+    println "5. Jupiter"
+}
+
+
+//
+// Creatin task properties
+//
+task myTask {
+    ext.devFolder = "../example01"
+}
+
+task printMyTaskPropery << {
+    print myTask.devFolder
+}
+
+//
+// Using methods
+//
+task myTaskFiles << {
+    println "File list from : $myTask.devFolder"
+    getFileList(myTask.devFolder).each { File file -> println "  $file.name"
+    }
+}
+
+
+File[] getFileList(String dir) {
+    file(dir).listFiles({file -> file.isFile() } as FileFilter).sort()
+}
+
+
+//
+// Declaring default tasks, which are started when we don't provide specific task
+// execute by: gradle
+defaultTasks 'clean', 'run'
+
+task clean << { println "Default Celaning" }
+
+task run << { println "Default Running!" }
+
+
+
+//
+// Configuring by DAG
+// Gradle has a configuration phase and an execution phase. 
+// After the configuration phase, Gradle knows all tasks that should be executed. 
+// Gradle offers you a hook to make use of this information.
+// 
+ext {
+    distType = "zip"
+}
+
+task distribution << {
+    println "We build the $distType with version=$version"
+}
+
+task release(dependsOn: 'distribution') << {
+    println "We release now"
+}
+
+task releaseWAR(dependsOn: 'release') << {
+    println "Update WAR META-INF"
+}
+
+gradle.taskGraph.whenReady {
+    taskGraph ->         
+        if (taskGraph.hasTask(release)) {
+            distType = "war"
+        }
+	    if (taskGraph.hasTask(release)) {
+	        version = "1.0"
+	    }  else {
+	        version = "1.0-SNAPSHOT"
+	    }
+}
