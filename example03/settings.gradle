@@ -1,0 +1,6 @@
+rootProject.name = 'example03'
+
+// Define which projects to include in build
+include 'shared', 'api'
+include 'services:time'
+include 'services:webservice'

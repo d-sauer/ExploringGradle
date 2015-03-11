@@ -1,0 +1,25 @@
+//
+// Defining dependency on another project
+// Gradle will ensure depending project always gets built before this project
+//
+dependencies {
+	compile project(':shared')
+}
+
+apply plugin: 'java'
+
+task dist(type: Zip) {
+	dependsOn jar
+	println 'Run dist (Zip)'
+	from 'src/dist'
+	into('libs') {
+		from jar.archivePath
+		from configurations.runtime
+	}
+}
+
+artifacts {
+	println 'Run artifacts'
+	
+	//archive dist
+}
